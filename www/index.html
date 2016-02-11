@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Consulta de Clientes</title>
+        <meta http-equiv='Content-Type' content='text/html; charset=utf-8'/>
+        <meta http-equiv="Content-Security-Policy" content="default-src *; script-src 'self' 'unsafe-inline' 'unsafe-eval' *; style-src  'self' 'unsafe-inline' *">
+        <meta name='viewport' content='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no'/>
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+        <link rel='stylesheet' href='http://example.gajotres.net/iscrollview/jquery.mobile.iscrollview.css'/>
+        <link rel='stylesheet' href='http://example.gajotres.net/iscrollview/jquery.mobile.iscrollview-pull.css'/>
+        <style>
+            .ui-content {
+                padding: 0 !important;
+            }
+
+            .ui-listview {
+                margin: 0 !important;
+            }
+
+            .example-wrapper, .example-wrapper div.iscroll-scroller {
+                width: 100% !important;
+            }
+            .ui-input-search {
+                width: 70%;
+                display: inline-block;
+            }
+
+            .ui-field-contain {
+                border-bottom-width: 0;
+            }
+        </style>
+        <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+
+        <script src='http://example.gajotres.net/iscrollview/iscroll.js'></script>
+        <script src='http://example.gajotres.net/iscrollview/jquery.mobile.iscrollview.js'></script>
+        <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+        <!--<script type="text/javascript" src="cordova.js"></script>-->
+        <script type="text/javascript" src="js/main.js"></script>
+
+        <script>
+            //$(document).on('pageinit', '#home', function () {
+            //    alert('teste');
+            //});
+
+            $(document).on('click', '#search_button', function () {
+                search_field = $('#search_field').val();
+
+                //console.log(search_field);
+
+                var
+                        url = 'http://www.scmminimax.com.br/cgi-bin/portalprd/wep/wex0005.p',
+                        //        'http://erdinger/cgi-bin/wspd_cgi.sh/WService=portalprd/wep/wex0005.p',
+                        //        
+                        user = '?logUser=sqlworks'
+                mode = '&nome=',
+                        nomeCliente = encodeURI(search_field);
+                console.log(url + user + mode + nomeCliente);
+                $.ajax({
+                    url: url + user + mode + nomeCliente,
+                    dataType: 'json',
+                    async: true,
+                    success: function (result) {
+                        ajax.parseJSONP(result);
+                        //console.log(ajax);
+                    },
+                    error: function (request, error) {
+                        alert('A rede está inacessível, tente novamente mais tarde!');
+                        console.log(request);
+                        console.log(error);
+                    }
+                });
+            });
+
+            $(document).on('pagebeforeshow', '#headline', function () {
+                $('#movie-data').empty();
+                $.each(movieInfo.result, function (i, row) {
+                    //console.log(JSON.stringify(row));
+
+                    if (row.id == movieInfo.id) {
+                        $('#movie-data').append('<li>Raz&atilde;o Social: ' + row.nome_emit + '</li>');
+                        $('#movie-data').append('<li>Nome Abrev: ' + row.nome_abrev + '</li>');
+                        $('#movie-data').append('<li>CNPJ : ' + row.cgc + '</li>');
+                        $('#movie-data').append('<li>Cidade : ' + row.cidade + '   Estado: ' + row.estado + '</li>');
+                        $('#movie-data').listview('refresh');
+
+
+                        var mapHandler = new MapCtrl(function (error) {
+                            window.console.error(error.message);
+                        });
+                        var address = row.endereco + ', ' + row.cidade + ', ' + row.estado + ', ' + 'Brasil';
+                        console.log('address:' + address);
+                        console.log('decodeURIComponent(address)' + decodeURIComponent(address));
+                        mapHandler.address = decodeURIComponent(address);
+                        mapHandler.mapContainter = "addressMap";
+                        mapHandler.headerID = "#addressHeader";
+                        mapHandler.locateAddress();
+
+/*
+        var useMyLocation = true;
+        var to = address;
+        var from = address;
+        var mode = "DRIVING";
+        mapHandler.mapContainter = "directionMap";
+        mapHandler.headerID = "#dirlistHeader";
+        mapHandler.findDirections(from, to, useMyLocation, mode, printDirectionResults);
+*/
+
+                    }
+                });
+            });
+
+            $(document).on('vclick', '#movie-list li a', function () {
+                movieInfo.id = $(this).attr('data-id');
+                $.mobile.changePage('#headline', {transition: 'slide', changeHash: false});
+            });
+
+            var movieInfo = {
+                id: null,
+                result: null
+            }
+
+            var ajax = {
+                parseJSONP: function (result) {
+                    movieInfo.result = result.cliente;
+                    $('#movie-list').empty();
+                    $.each(result.cliente, function (i, row) {
+                        //console.log(JSON.stringify(row));
+                        $('#movie-list').append('<li><a href="" data-id=' + row.id + '><h3>' + row.nome_abrev + '    <small> - ' + row.nome_emit + '</small></h3></a></li>');
+                    });
+                    $('#movie-list').listview('refresh');
+                }
+            }
+
+        </script>
+    </head>
+    <body>     
+        <div data-role='page' id='home'>
+            <div data-role='header' data-theme='a' >
+                <h3>Consulta de Clientes</h3>
+            </div>        
+            <div data-role='content'>
+                <div data-role="fieldcontain">
+                    <div>
+                        <input type="search" name="search_field" id="search_field" placeholder="Nome do Cliente" value="" data-mini="true" data-inline="true"/>
+                        <input type="button" id="search_button" data-type="button" data-theme="b" data-icon="search" value="Pesquisa" data-mini="true" data-inline="true">
+                    </div>
+                </div>
+                <div class='example-wrapper' data-iscroll>
+                    <ul data-role='listview'  id='movie-list' data-theme='a'>
+
+                    </ul>
+                </div>
+            </div>
+            <div data-theme='a' data-role='footer'>
+                <h1>SQLWorks</h1>
+            </div>              
+        </div>
+
+        <div data-role='page' id='headline'>
+            <div data-theme='a' data-role='header'>
+                <a href='#home' class='ui-btn-left' data-transition='slide' data-direction='reverse'>Voltar</a>                        
+                <h1 id="addressHeader">Cliente</h1>
+            </div>        
+            <div data-role='content'>
+                <ul data-role='listview'  id='movie-data' data-theme='a'>
+                </ul>
+                <div id="addressMap" style="width:100%;height:100%;"></div>
+            </div>
+            <div data-theme='a' data-role='footer'>
+                <h1>SQLWorks</h1>
+            </div>              
+        </div>    
+    </body>
+</html>   
